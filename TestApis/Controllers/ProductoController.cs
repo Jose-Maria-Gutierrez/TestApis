@@ -53,7 +53,11 @@ namespace TestApis.Controllers
             {
                 return NotFound();
             }
-            productoExistente = producto.productoDTOtoProducto();
+            productoExistente.Nombre = producto.Nombre;
+            productoExistente.Descripcion = producto.Descripcion;
+            productoExistente.SKU = producto.SKU;
+            productoExistente.Precio = producto.Precio;
+            
             this.context.productos.Update(productoExistente);
             this.context.SaveChanges();
             return productoExistente;
