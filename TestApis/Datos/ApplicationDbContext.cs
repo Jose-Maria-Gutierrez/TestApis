@@ -10,5 +10,6 @@ namespace TestApis.Datos
         }
 
         public DbSet<Producto> productos { get; set; }
+        public DbSet<User> users { get; set; } 
     }
 }

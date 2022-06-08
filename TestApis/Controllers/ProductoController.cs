@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
+using TestApis.DAL;
 using TestApis.Datos;
 using TestApis.DTO;
 using TestApis.Models;
@@ -11,24 +12,23 @@ namespace TestApis.Controllers
     [ApiController]
     public class ProductoController : ControllerBase
     {
-        private readonly ApplicationDbContext context;
+        private readonly IUnitOfWork uof;
 
-        public ProductoController(ApplicationDbContext _context)
+        public ProductoController(IUnitOfWork unitOfWork)
         {
-            this.context = _context;
+            this.uof = unitOfWork;
         }
         
         [HttpGet]
         public IEnumerable<ProductoDTO> GetProductos()
         {
-            var lista = this.context.productos.ToList().Select(x => x.productoToDto());
-            return lista;
+            return this.uof.ProductoRepository.ObtenerProductos();
         }
 
         [HttpGet("{id}")]
         public ActionResult<ProductoDTO> GetProducto(int id)
         {
-            var producto = this.context.productos.SingleOrDefault(p => p.Id == id);
+            Producto? producto = this.uof.ProductoRepository.GetById(id);
             if(producto == null)
             {
                 return NotFound();
@@ -39,40 +39,42 @@ namespace TestApis.Controllers
         [HttpPost]
         public ActionResult<Producto> AgregarProducto([FromBody]ProductoDTO producto)
         {
-            Producto nuevo = producto.productoDTOtoProducto();
-            this.context.productos.Add(nuevo);
-            this.context.SaveChanges();
-            return nuevo;
+            this.uof.ProductoRepository.AgregarProducto(producto);
+            this.uof.SaveChanges();
+            return NoContent(); //tendria que devolver el Producto
         }
 
         [HttpPut("{id}")]
         public ActionResult<Producto> ModificarProducto(int id,[FromBody] ProductoDTO producto)
         {
-            Producto productoExistente = this.context.productos.First(x => x.Id == id);
-            if (productoExistente == null)
+            if (ModelState.IsValid)
             {
-                return NotFound();
+                Producto? productoExistente = this.uof.ProductoRepository.GetById(id);
+                if (productoExistente == null)
+                {
+                    return NotFound();
+                }
+                productoExistente.Nombre = producto.Nombre;
+                productoExistente.Descripcion = producto.Descripcion;
+                productoExistente.SKU = producto.SKU;
+                productoExistente.Precio = producto.Precio;
+                this.uof.ProductoRepository.update(productoExistente);
+                this.uof.SaveChanges();
+                return productoExistente;
             }
-            productoExistente.Nombre = producto.Nombre;
-            productoExistente.Descripcion = producto.Descripcion;
-            productoExistente.SKU = producto.SKU;
-            productoExistente.Precio = producto.Precio;
-            
-            this.context.productos.Update(productoExistente);
-            this.context.SaveChanges();
-            return productoExistente;
+            return BadRequest();
         }
 
         [HttpDelete("{id}")]
         public ActionResult Delete(int id)
         {
-            Producto pExiste = this.context.productos.First(x=>x.Id==id);
-            if (pExiste == null)
+            Producto? ProductoExistente = this.uof.ProductoRepository.GetById(id);
+            if (ProductoExistente == null)
             {
                 return NotFound();
             }
-            this.context.productos.Remove(pExiste);
-            this.context.SaveChanges();
+            this.uof.ProductoRepository.delete(ProductoExistente);
+            this.uof.SaveChanges();
             return NoContent();
         }
     }

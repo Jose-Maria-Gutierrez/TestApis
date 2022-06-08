@@ -12,8 +12,8 @@ using TestApis.Datos;
 namespace TestApis.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20220526132751_migracionInicial")]
-    partial class migracionInicial
+    [Migration("20220603134944_primerMigration")]
+    partial class primerMigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -53,6 +53,30 @@ namespace TestApis.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("productos");
+                });
+
+            modelBuilder.Entity("TestApis.Models.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("users");
                 });
 #pragma warning restore 612, 618
         }
