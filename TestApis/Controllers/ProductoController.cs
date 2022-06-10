@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 using TestApis.DAL;
 using TestApis.Datos;
 using TestApis.DTO;
@@ -13,15 +14,18 @@ namespace TestApis.Controllers
     public class ProductoController : ControllerBase
     {
         private readonly IUnitOfWork uof;
+        private readonly ILogger<ProductoController> logger;
 
-        public ProductoController(IUnitOfWork unitOfWork)
+        public ProductoController(IUnitOfWork unitOfWork, ILogger<ProductoController> logger)
         {
             this.uof = unitOfWork;
+            this.logger = logger;
         }
         
         [HttpGet]
         public IEnumerable<ProductoDTO> GetProductos()
         {
+            logger.LogDebug("se ejecuta GetProductos");
             return this.uof.ProductoRepository.ObtenerProductos();
         }
 
@@ -31,8 +35,10 @@ namespace TestApis.Controllers
             Producto? producto = this.uof.ProductoRepository.GetById(id);
             if(producto == null)
             {
+                logger.LogError($"metodo GetProducto no se encuentra el producto con id {id}");
                 return NotFound();
             }
+            logger.LogDebug($"se ejecuta metodo GetProducto");
             return producto.productoToDto();
         }
         
@@ -41,6 +47,7 @@ namespace TestApis.Controllers
         {
             this.uof.ProductoRepository.AgregarProducto(producto);
             this.uof.SaveChanges();
+            logger.LogDebug("se ejecuta AgregarProducto");
             return NoContent(); //tendria que devolver el Producto
         }
 
@@ -52,6 +59,7 @@ namespace TestApis.Controllers
                 Producto? productoExistente = this.uof.ProductoRepository.GetById(id);
                 if (productoExistente == null)
                 {
+                    logger.LogError($"metodo ModificarProducto no se encuentra id {id}");
                     return NotFound();
                 }
                 productoExistente.Nombre = producto.Nombre;
@@ -60,8 +68,10 @@ namespace TestApis.Controllers
                 productoExistente.Precio = producto.Precio;
                 this.uof.ProductoRepository.update(productoExistente);
                 this.uof.SaveChanges();
+                logger.LogDebug("se ejecuta ModificarProducto");
                 return productoExistente;
             }
+            logger.LogDebug("metodo ModificarProducto info no valida");
             return BadRequest();
         }
 
@@ -71,10 +81,12 @@ namespace TestApis.Controllers
             Producto? ProductoExistente = this.uof.ProductoRepository.GetById(id);
             if (ProductoExistente == null)
             {
+                logger.LogError($"metodo Delete no se encuentra id {id}");
                 return NotFound();
             }
             this.uof.ProductoRepository.delete(ProductoExistente);
             this.uof.SaveChanges();
+            logger.LogDebug("se ejecuta metodo Delete");
             return NoContent();
         }
     }

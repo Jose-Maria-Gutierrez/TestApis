@@ -34,7 +34,7 @@ namespace TestApisTest
 
             productosRepo.Setup(a => a.GetById(It.IsAny<int>())).Returns(hardcodeado);
 
-            ProductoController productoController = new ProductoController(unitOfWork.Object);
+            ProductoController productoController = new ProductoController(unitOfWork.Object, null);
 
             var respuesta = productoController.GetProducto(id);
 

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using System.Text.Json.Serialization;
 using TestApis.Authorization;
 using TestApis.DAL;
@@ -40,6 +41,11 @@ builder.Services.AddSwaggerGen();
     services.AddScoped<IJwtUtils, JwtUtils>();
     services.AddScoped<IUserService, UserService>();
 }
+
+var logger = new LoggerConfiguration().ReadFrom.
+    Configuration(builder.Configuration).Enrich.FromLogContext().CreateLogger();
+builder.Logging.ClearProviders();
+builder.Logging.AddSerilog(logger);
 
 var app = builder.Build();
 
